@@ -9,14 +9,28 @@ export class RpcCustomExceptionFilter implements ExceptionFilter {
 
     const rpcError = exception.getError();
 
-    if (typeof rpcError === 'object' && 'status' in rpcError && 'message' in rpcError) {
-      const status = rpcError.status;
-      return response.status(status).json(rpcError)
+    if (
+      typeof rpcError === 'object' &&
+      'status' in rpcError &&
+      'message' in rpcError
+    ) {
+      const status = Number(rpcError.status);
+
+      if (!Number.isInteger(status) || status < 100 || status > 599) {
+        // Status inválido, forzamos 500
+        return response.status(500).json({
+          status: 500,
+          message: rpcError.message || 'Internal Server Error',
+        });
+      }
+
+      return response.status(status).json(rpcError);
     }
 
+    // Caso default para otros errores
     response.status(400).json({
       status: 400,
-      message: rpcError
-    })
+      message: typeof rpcError === 'string' ? rpcError : 'Bad Request',
+    });
   }
 }
