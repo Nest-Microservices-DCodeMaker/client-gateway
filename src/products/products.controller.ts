@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
 import { PaginationDto } from 'src/common';
 import { NATS_SERVICE } from 'src/config/services';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('products')
 export class ProductsController {
@@ -13,6 +14,7 @@ export class ProductsController {
     private readonly client: ClientProxy
   ) {}
 
+  @UseGuards( AuthGuard )
   @Post()
   createProduct(@Body() createProductDto: CreateProductDto){
     return this.client.send({ cmd: 'create_product' }, createProductDto)
@@ -43,6 +45,7 @@ export class ProductsController {
     // }
   }
 
+  @UseGuards( AuthGuard )
   @Delete(':id')
   deleteProduct(@Param('id') id: string) {
     return this.client.send({ cmd: 'delete_product' }, { id })
@@ -51,6 +54,7 @@ export class ProductsController {
       );
   }
 
+  @UseGuards( AuthGuard )
   @Patch(':id')
   updateProduct(
     @Param('id', ParseIntPipe) id: number,
